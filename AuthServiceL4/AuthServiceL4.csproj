@@ -49,6 +49,8 @@
     <Compile Include="Classes\IHash.cs" />
     <Compile Include="Classes\MD5hash.cs" />
     <Compile Include="Classes\SHA1hash.cs" />
+    <Compile Include="Classes\SKeyAuthSever.cs" />
+    <Compile Include="Classes\StandartAuthServer.cs" />
     <Compile Include="Forms\AuthForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -15,18 +15,32 @@ namespace AuthServiceL4
     public partial class RegistrationForm : Form
     {
         string password, login;
-        readonly string file;
-        IHash hash;
+        //readonly string file;
+        readonly IHash hash;
         AuthForm aform;
-        public RegistrationForm(AuthForm af)
+        SKeyAuthSever skey;
+        StandartAuthServer standart;
+        readonly AuthType atype;
+        public RegistrationForm(AuthForm af, AuthType at)
         {
             InitializeComponent();
             tbPassword.UseSystemPasswordChar = true;
             tbPassword.MaxLength = 16;
             tbLogin.MaxLength = 16;
-            file = ".\\DataBase.txt";
+            //file = ".\\DataBase.txt";
             hash = new MD5hash();
+            skey = new SKeyAuthSever();
+            standart = new StandartAuthServer();
             aform = af;
+            atype = at;
+            lbPassword.Text = (at == AuthType.STANDART) ? "Password" : "Key";
+        }
+        private string keyHash(uint N, string key)
+        {
+            string tmpHash = key;
+            for (uint i = 0; i < N; i++)
+                tmpHash = hash.GetHash(tmpHash);
+            return tmpHash;
         }
         private void Message(string text, string title, MessageBoxIcon icon)
         {
@@ -83,37 +97,23 @@ namespace AuthServiceL4
                 }
             }
         }
-
         private void RegistrationForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             aform.Visible = true;
         }
-
         private void bRegister_Click(object sender, EventArgs e)
         {
-            if (!File.Exists(file))
+            if (atype == AuthType.STANDART 
+                ? standart.SetNewUser(login, password) 
+                : skey.SetNewUser(login, keyHash(skey.N, password)))
             {
-                using (FileStream fs = File.Create(file)) { }
-            }
-            using (StreamReader sr = new StreamReader(file))
-            {
-                string str;
-                while ((str = sr.ReadLine()) != null)
-                {
-                    string[] tmp = str.Split(' ');
-                    if (tmp[0] == login)
-                    {
-                        Message("This login already exist!", "Error", MessageBoxIcon.Error);
-                        return;
-                    }
-                    Array.Clear(tmp, 0, tmp.Length);
-                }
-            }
-            using (StreamWriter sw = new StreamWriter(file, true))
-            {
-                sw.WriteLine(login + ' ' + hash.GetHash(password));
                 Message("Registration completed", "Done", MessageBoxIcon.Information);
                 Close();
+            }
+            else
+            {
+                Message("This login already exist!", "Error", MessageBoxIcon.Error);
+                return;
             }
         }
     }

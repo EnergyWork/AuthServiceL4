@@ -12,19 +12,37 @@ using AuthServiceL4.Classes;
 
 namespace AuthServiceL4
 {
+    public enum AuthType
+    {
+        STANDART, SKEY
+    }
     public partial class AuthForm : Form
     {
         string login, password;
-        readonly string file;
+        string file; // ".\\DataBase.txt" ".\\DataBaseSKey.txt"
         readonly IHash hash;
+        readonly SKeyAuthSever skey;
+        readonly StandartAuthServer standart;
+        AuthType authType;
         uint attempts;
         public AuthForm()
         {
             InitializeComponent();
+            cbMethod.SelectedIndex = 0;
             hash = new MD5hash();
+            skey = new SKeyAuthSever();
+            standart = new StandartAuthServer();
+            authType = AuthType.STANDART;
             attempts = 0;
             tbPassword.UseSystemPasswordChar = true;
             file = ".\\DataBase.txt";
+        }
+        private string keyHash(int N, string key)
+        {
+            string tmpHash = key;
+            for (uint i = 0; i < N; i++)
+                tmpHash = hash.GetHash(tmpHash);
+            return tmpHash;
         }
         private void Message(string text, string title, MessageBoxIcon icon)
         {
@@ -38,57 +56,46 @@ namespace AuthServiceL4
             if (dr == DialogResult.OK)
                 return;
         }
-        private void LockedForm()
+        private void ToLockTheForm()
         {
             tbLogin.Enabled = false;
             tbPassword.Enabled = false;
             bEnter.Enabled = false;
             llReg.Enabled = false;
+            cbMethod.Enabled = false;
             Text = "Locked";
         }
         private void bEnter_Click(object sender, EventArgs e)
         {
-            if (!File.Exists(file))
+            uint callback;
+            if (authType == AuthType.STANDART)
+                callback = standart.Verify(login, password);
+            else
+                callback = skey.Verify(login, keyHash(skey.GetUserN(login) - 1, password));
+
+            switch(callback)
             {
-                using (FileStream fs = File.Create(file)) { }
-                Message("The user is not found!", "Error", MessageBoxIcon.Warning);
-                return;
-            }
-            using (StreamReader sr = new StreamReader(file))
-            {
-                string str;
-                while ((str = sr.ReadLine()) != null)
-                {
-                    string[] tmp = str.Split(' ');
-                    if (tmp[0] == login)
+                case 0: // "The user is not found!"
+                    Message("The user is not found!", "Error", MessageBoxIcon.Warning);
+                    break;
+                case 1: // "Wrong password!"
+                    Message("Wrong password!", "Warning", MessageBoxIcon.Warning);
+                    attempts++;
+                    if (attempts == 3)
                     {
-                        if (!hash.VerifyHash(password, tmp[1]))
-                        {
-                            Message("Wrong password!", "Error", MessageBoxIcon.Warning);
-                            attempts++;
-                            if (attempts == 3)
-                            {
-                                LockedForm();
-                                Message("LOCKED!", "Error", MessageBoxIcon.Error);
-                                return;
-                            }
-                            return;
-                        }
-                        else
-                        {
-                            Message("Login completed!", "Complete", MessageBoxIcon.Information);
-                            attempts = 0;
-                            return;
-                        }
+                        ToLockTheForm();
+                        Message("LOCKED!", "Error", MessageBoxIcon.Error);
                     }
-                    Array.Clear(tmp, 0, tmp.Length);
-                }
-                Message("The user is not found!", "Error", MessageBoxIcon.Warning);
-            }
+                    break;
+                case 2: // "Login completed!"
+                    Message("Login completed!!", "Complete", MessageBoxIcon.Information);
+                    attempts = 0;
+                    break;
+            }  
         }
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            RegistrationForm registrationForm = new RegistrationForm(this);
+            RegistrationForm registrationForm = new RegistrationForm(this, authType);
             Visible = false;
             registrationForm.ShowDialog();
         }
@@ -103,6 +110,26 @@ namespace AuthServiceL4
                 password += e.KeyChar;
             }
         }
+        private void UdpateForm()
+        {
+            lbPassword.Text = (authType == AuthType.STANDART) ? "Password" : "Key";
+            file = (authType == AuthType.STANDART) ? ".\\DataBase.txt" : ".\\DataBaseSKey.txt";
+        }
+        private void cbMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch(cbMethod.SelectedIndex)
+            {
+                case 0: //Standart method
+                    authType = AuthType.STANDART;
+                    UdpateForm();
+                    break;
+                case 1: //SKey method
+                    authType = AuthType.SKEY;
+                    UdpateForm();
+                    break;
+            }
+        }
+
         private void tbLogin_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (!char.IsDigit(e.KeyChar) && !char.IsLetter(e.KeyChar) && e.KeyChar != 8)

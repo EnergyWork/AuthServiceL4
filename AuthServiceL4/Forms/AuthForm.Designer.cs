@@ -34,6 +34,8 @@
             this.lbLogin = new System.Windows.Forms.Label();
             this.lbPassword = new System.Windows.Forms.Label();
             this.llReg = new System.Windows.Forms.LinkLabel();
+            this.lMethod = new System.Windows.Forms.Label();
+            this.cbMethod = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // tbLogin
@@ -91,11 +93,37 @@
             this.llReg.Text = "Registration";
             this.llReg.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
+            // lMethod
+            // 
+            this.lMethod.AutoSize = true;
+            this.lMethod.Location = new System.Drawing.Point(57, 157);
+            this.lMethod.Name = "lMethod";
+            this.lMethod.Size = new System.Drawing.Size(70, 13);
+            this.lMethod.TabIndex = 6;
+            this.lMethod.Text = "Auth method:";
+            // 
+            // cbMethod
+            // 
+            this.cbMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbMethod.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.cbMethod.FormattingEnabled = true;
+            this.cbMethod.ItemHeight = 13;
+            this.cbMethod.Items.AddRange(new object[] {
+            "Standart",
+            "S/Key"});
+            this.cbMethod.Location = new System.Drawing.Point(124, 154);
+            this.cbMethod.Name = "cbMethod";
+            this.cbMethod.Size = new System.Drawing.Size(67, 21);
+            this.cbMethod.TabIndex = 7;
+            this.cbMethod.SelectedIndexChanged += new System.EventHandler(this.cbMethod_SelectedIndexChanged);
+            // 
             // AuthForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(247, 164);
+            this.ClientSize = new System.Drawing.Size(247, 180);
+            this.Controls.Add(this.cbMethod);
+            this.Controls.Add(this.lMethod);
             this.Controls.Add(this.llReg);
             this.Controls.Add(this.lbPassword);
             this.Controls.Add(this.lbLogin);
@@ -120,6 +148,8 @@
         private System.Windows.Forms.Label lbLogin;
         private System.Windows.Forms.Label lbPassword;
         private System.Windows.Forms.LinkLabel llReg;
+        private System.Windows.Forms.Label lMethod;
+        private System.Windows.Forms.ComboBox cbMethod;
     }
 }
 
